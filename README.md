@@ -105,6 +105,12 @@ We welcome contributors interested in:
 - Observability tooling
 - Deterministic AI systems
 
+Thanks goes to these amazing people:
+
+<a href="https://github.com/Tracer-Cloud/open-sre-agent/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Tracer-Cloud/open-sre-agent" />
+</a>
+
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
