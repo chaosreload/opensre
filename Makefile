@@ -28,14 +28,14 @@ local-rca-demo:
 	$(PYTHON) -m app.demo.local_rca
 
 alert-template:
-	@$(PYTHON) -m app.main --print-template $(or $(TEMPLATE),generic)
+	opensre investigate --print-template $(or $(TEMPLATE),generic)
 
 investigate-alert:
 	@[ -n "$(ALERT)" ] || { echo "Usage: make investigate-alert ALERT=/path/to/alert.json"; exit 1; }
-	$(PYTHON) -m app.main --input "$(ALERT)"
+	opensre investigate --input "$(ALERT)"
 
 verify-integrations:
-	$(PYTHON) -m app.integrations verify $(if $(SERVICE),$(SERVICE),) $(if $(SLACK_TEST),--send-slack-test,)
+	opensre integrations verify $(if $(SERVICE),$(SERVICE),) $(if $(SLACK_TEST),--send-slack-test,)
 
 check-docker:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is required for the live local Grafana stack. Install Docker Desktop or another Docker-compatible runtime, then rerun this target."; exit 1; }
@@ -155,7 +155,7 @@ grafana-demo:
 
 # Run the generic CLI (reads from stdin or --input)
 run:
-	$(PYTHON) -m app.main
+	opensre investigate
 
 dev: 
 	langgraph dev
@@ -298,6 +298,12 @@ help:
 	@echo "  LOCAL DEVELOPMENT"
 	@echo "  make install         - Install dependencies"
 	@echo "  make onboard         - Run the OpenSRE onboarding flow"
+	@echo ""
+	@echo "  CLI (tab-completable, run 'opensre -h' for full help)"
+	@echo "  opensre onboard                    - Interactive setup wizard"
+	@echo "  opensre investigate -i alert.json  - Run RCA on an alert payload"
+	@echo "  opensre integrations list          - Show configured integrations"
+	@echo "  opensre integrations verify        - Verify connectivity"
 	@echo ""
 	@echo "  TESTING & QUALITY"
 	@echo "  make test            - Run fast unit tests + Prefect cloud E2E"

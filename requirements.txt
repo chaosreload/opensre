@@ -28,6 +28,7 @@ kubernetes>=28.1.0
 # Utilities
 python-dotenv>=1.0.0
 dotenv
+click>=8.1.0  # CLI framework with tab-completion support
 rich>=13.0.0  # For pretty terminal output
 boto3
 PyYAML>=6.0
