@@ -43,7 +43,7 @@ def test_run_investigation_cli_shapes_agent_state(monkeypatch) -> None:
             "root_cause": "bad deploy",
         }
 
-    monkeypatch.setattr("app.cli.investigate.LLMSettings.from_env", lambda: object())
+    monkeypatch.setattr("app.cli.investigate.LLMSettings.from_env", object)
     monkeypatch.setattr("app.cli.investigate._call_run_investigation", fake_run_investigation)
 
     result = run_investigation_cli(
