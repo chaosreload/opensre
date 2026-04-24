@@ -777,6 +777,13 @@ Thanks goes to these amazing people:
             <sub><b>hcombalicer</b></sub>
         </a>
     </td>
+            <td align="center">
+        <a href="https://github.com/CuriousHet">
+            <img src="https://avatars.githubusercontent.com/u/102606191?v=4" width="100" alt="CuriousHet"/>
+            <br />
+            <sub><b>CuriousHet</b></sub>
+        </a>
+    </td>
 		</tr>
 	</tbody>
 </table>
