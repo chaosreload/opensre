@@ -16,6 +16,8 @@ import botocore.awsrequest
 import botocore.credentials
 from kubernetes import client as k8s_client
 
+from app.services.eks.eks_client import _stored_credentials_to_aws_creds
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,20 +90,19 @@ def build_k8s_clients(
     Returns (CoreV1Api, AppsV1Api) ready to query pods, events, nodes, deployments.
     No kubeconfig file is written to disk.
     """
-    if credentials and credentials.get("access_key_id") and credentials.get("secret_access_key"):
+    stored = _stored_credentials_to_aws_creds(credentials)
+    if stored is not None:
         # Explicit stored-integration credentials path (highest priority).
         # Matches the catalog + resolve_integrations flow: the AWS integration
         # is configured with IAM user creds (access_key_id + secret_access_key),
         # possibly with a session_token, and no role_arn. Previously these
         # silently fell through to the ambient botocore chain which missed
         # the stored values entirely when ambient creds were also set but
-        # pointed elsewhere.
+        # pointed elsewhere. The shared ``_stored_credentials_to_aws_creds``
+        # helper keeps the normalization rules (empty session_token → None,
+        # both required keys present) in sync with ``EKSClient``.
         logger.info("[eks] Using explicit stored-integration AWS credentials")
-        assumed = {
-            "AccessKeyId": credentials["access_key_id"],
-            "SecretAccessKey": credentials["secret_access_key"],
-            "SessionToken": credentials.get("session_token") or "",
-        }
+        assumed = stored
     elif role_arn:
         assumed = _assume_role(role_arn, external_id, "TracerEKSK8sInvestigation")
     else:
