@@ -181,3 +181,47 @@ def test_eks_client_assume_role_external_id_passed_through() -> None:
     kwargs = mock_sts.assume_role.call_args.kwargs
     assert kwargs["ExternalId"] == "ext-123"
     assert kwargs["RoleSessionName"] == "TracerEKSInvestigation"
+
+
+def test_eks_client_assume_role_happy_path_credentials_none() -> None:
+    """Production happy path: no stored credentials, only role_arn.
+
+    Covers the "credentials=None + role_arn=valid" branch (no external_id, no
+    stored creds) and asserts the STS-returned triplet is threaded into the
+    boto3 eks client call. This was the most common production path before
+    stored-credentials support was added and needs explicit coverage so later
+    refactors don't silently break it.
+    """
+    mock_sts = MagicMock()
+    mock_sts.assume_role.return_value = {
+        "Credentials": {
+            "AccessKeyId": "AKIA_ASSUMED",
+            "SecretAccessKey": "SECRET_ASSUMED",
+            "SessionToken": "TOKEN_ASSUMED",
+        }
+    }
+    captured: dict[str, object] = {}
+
+    def _boto_client(service_name: str, **kwargs):  # type: ignore[no-untyped-def]
+        if service_name == "sts":
+            return mock_sts
+        if service_name == "eks":
+            captured.update(kwargs)
+            return MagicMock()
+        raise AssertionError(f"unexpected boto3 client: {service_name}")
+
+    with patch("app.services.eks.eks_client.boto3.client", side_effect=_boto_client):
+        EKSClient(role_arn="arn:aws:iam::123:role/r", region="us-west-2", credentials=None)
+
+    # STS called exactly once, with the expected RoleArn and no ExternalId.
+    mock_sts.assume_role.assert_called_once()
+    assume_kwargs = mock_sts.assume_role.call_args.kwargs
+    assert assume_kwargs["RoleArn"] == "arn:aws:iam::123:role/r"
+    assert assume_kwargs["RoleSessionName"] == "TracerEKSInvestigation"
+    assert "ExternalId" not in assume_kwargs
+
+    # Assumed credentials + region threaded into the boto3 eks client.
+    assert captured["region_name"] == "us-west-2"
+    assert captured["aws_access_key_id"] == "AKIA_ASSUMED"
+    assert captured["aws_secret_access_key"] == "SECRET_ASSUMED"
+    assert captured["aws_session_token"] == "TOKEN_ASSUMED"
